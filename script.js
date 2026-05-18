@@ -47,7 +47,7 @@ function showApiLoading(show) {
 const i18n = {
     tr: {
         page_title: "Sipsak.com - Endüstriyel Web Araçları", nav_api: "API Aktif",
-        cat_all: "Tümü", hero_1: "Sınırsız Güç.", hero_2: "Kusursuz Sonuç.", 
+        cat_all: "Tümü", hero_1: "Sınırsız Güç.", hero_2: "Kusursuz Sonuç.",
         hero_sub: "Amatör kütüphaneleri geride bırakın. Tüm dosyalarınız endüstri standardındaki şifreli yapay zeka sunucularımızda saniyeler içinde sıfır hatayla işlenir.",
         global_drop: "ŞİPŞAK İŞLEMEK İÇİN BIRAK!", global_drop_sub: "Siz bırakın, AI destekli API otomatik yönlendirsin.",
         api_loading: "BULUTTA İŞLENİYOR", btn_back: "Geri Dön",
@@ -61,7 +61,7 @@ const i18n = {
     },
     en: {
         page_title: "Sipsak.com - Industrial Web Tools", nav_api: "API Active",
-        cat_all: "All", hero_1: "Unlimited Power.", hero_2: "Flawless Result.", 
+        cat_all: "All", hero_1: "Unlimited Power.", hero_2: "Flawless Result.",
         hero_sub: "Leave amateur libraries behind. Your files are processed flawlessly in seconds on our industry-standard encrypted AI servers.",
         global_drop: "DROP TO PROCESS!", global_drop_sub: "Drop it, AI-powered API routes it automatically.",
         api_loading: "PROCESSING IN CLOUD", btn_back: "Go Back",
@@ -81,7 +81,7 @@ function toggleLanguage() {
     document.getElementById('lang-btn').innerHTML = `${currentLang.toUpperCase()} <i class="fa-solid fa-globe text-indigoSoft"></i>`;
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (i18n[currentLang][key]) el.innerHTML = i18n[currentLang][key]; 
+        if (i18n[currentLang][key]) el.innerHTML = i18n[currentLang][key];
     });
     showToast(currentLang === 'tr' ? 'Sistem dili Türkçe.' : 'System language English.', 'success');
 }
@@ -90,7 +90,7 @@ function toggleLanguage() {
 function showDashboard() {
     document.querySelectorAll('.tool-view').forEach(el => el.classList.add('hidden'));
     document.getElementById('dashboard-view').classList.remove('hidden');
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
 }
 
 function filterCategory(cat) {
@@ -106,14 +106,14 @@ function filterCategory(cat) {
 const globalOverlay = document.getElementById('global-drop-overlay');
 let dragCounter = 0;
 window.addEventListener('dragenter', e => { e.preventDefault(); dragCounter++; globalOverlay.classList.remove('hidden'); globalOverlay.classList.add('flex'); });
-window.addEventListener('dragleave', e => { e.preventDefault(); dragCounter--; if(dragCounter<=0){ dragCounter=0; globalOverlay.classList.add('hidden'); globalOverlay.classList.remove('flex'); } });
+window.addEventListener('dragleave', e => { e.preventDefault(); dragCounter--; if (dragCounter <= 0) { dragCounter = 0; globalOverlay.classList.add('hidden'); globalOverlay.classList.remove('flex'); } });
 window.addEventListener('dragover', e => e.preventDefault());
 window.addEventListener('drop', e => {
-    e.preventDefault(); dragCounter=0; globalOverlay.classList.add('hidden'); globalOverlay.classList.remove('flex');
+    e.preventDefault(); dragCounter = 0; globalOverlay.classList.add('hidden'); globalOverlay.classList.remove('flex');
     if (e.dataTransfer.files.length > 0) {
         const file = e.dataTransfer.files[0];
         const name = file.name.toLowerCase();
-        
+
         if (name.endsWith('.pdf')) openTool('pdf-split', e.dataTransfer.files);
         else if (name.endsWith('.docx') || name.endsWith('.xlsx') || name.endsWith('.pptx')) openTool('office-convert', e.dataTransfer.files);
         else if (file.type.startsWith('image/')) openTool('img-ocr', e.dataTransfer.files); // Default to OCR for smart drop
@@ -129,32 +129,32 @@ window.addEventListener('drop', e => {
 const apiTools = {
     'pdf-split': {
         title: 't_pdf_split_t', desc: 't_pdf_split_d', icon: 'fa-scissors', color: 'text-red-400', accept: 'application/pdf', multiple: false, endpoint: '/api/pdf/split',
-        options: [ { id: 'pageRange', type: 'text', label: 'Sayfa Aralıkları (Örn: 1-5, 8)', placeholder: '1-5' } ]
+        options: [{ id: 'pageRange', type: 'text', label: 'Sayfa Aralıkları (Örn: 1-5, 8)', placeholder: '1-5' }]
     },
     'pdf-merge': {
         title: 't_pdf_merge_t', desc: 't_pdf_merge_d', icon: 'fa-layer-group', color: 'text-red-400', accept: 'application/pdf', multiple: true, endpoint: '/api/pdf/merge', options: []
     },
     'pdf-compress': {
         title: 't_pdf_comp_t', desc: 't_pdf_comp_d', icon: 'fa-compress', color: 'text-red-400', accept: 'application/pdf', multiple: false, endpoint: '/api/pdf/compress',
-        options: [ { id: 'quality', type: 'select', label: 'Sıkıştırma Algoritması', options: [{val:'high',text:'Maksimum Sıkıştırma (Düşük Boyut)'}, {val:'balanced',text:'Dengeli (Önerilen)'}, {val:'lossless',text:'Kayıpsız Optimizasyon'}] } ]
+        options: [{ id: 'quality', type: 'select', label: 'Sıkıştırma Algoritması', options: [{ val: 'high', text: 'Maksimum Sıkıştırma (Düşük Boyut)' }, { val: 'balanced', text: 'Dengeli (Önerilen)' }, { val: 'lossless', text: 'Kayıpsız Optimizasyon' }] }]
     },
     'office-convert': {
         title: 't_off_cvrt_t', desc: 't_off_cvrt_d', icon: 'fa-file-invoice', color: 'text-blue-400', accept: '.docx,.xlsx,.pptx,.doc,.xls', multiple: false, endpoint: '/api/office/convert',
-        options: [ { id: 'targetFormat', type: 'select', label: 'Dönüştürülecek Format', options: [{val:'pdf',text:'Standart PDF'}, {val:'html',text:'Temiz HTML Kodu'}, {val:'json',text:'Gelişmiş JSON Verisi'}] } ]
+        options: [{ id: 'targetFormat', type: 'select', label: 'Dönüştürülecek Format', options: [{ val: 'pdf', text: 'Standart PDF' }, { val: 'html', text: 'Temiz HTML Kodu' }, { val: 'json', text: 'Gelişmiş JSON Verisi' }] }]
     },
     'img-ocr': {
         title: 't_img_ocr_t', desc: 't_img_ocr_d', icon: 'fa-eye', color: 'text-yellow-400', accept: 'image/*', multiple: false, endpoint: '/api/media/ocr',
-        options: [ { id: 'lang', type: 'select', label: 'Metin Dili (AI Modeli)', options: [{val:'auto',text:'AI Otomatik Algılama'}, {val:'tur',text:'Türkçe Gelişmiş'}, {val:'eng',text:'İngilizce Standart'}] } ]
+        options: [{ id: 'lang', type: 'select', label: 'Metin Dili (AI Modeli)', options: [{ val: 'auto', text: 'AI Otomatik Algılama' }, { val: 'tur', text: 'Türkçe Gelişmiş' }, { val: 'eng', text: 'İngilizce Standart' }] }]
     },
     'img-format': {
         title: 't_img_fmt_t', desc: 't_img_fmt_d', icon: 'fa-image', color: 'text-purple-400', accept: 'image/*', multiple: false, endpoint: '/api/media/convert-image',
-        options: [ { id: 'format', type: 'select', label: 'Hedef Çıktı Formatı', options: [{val:'webp',text:'WebP (Google Standardı)'}, {val:'jpg',text:'JPG (Maksimum Uyumluluk)'}, {val:'png',text:'PNG (Şeffaf Kayıpsız)'}] },
-                   { id: 'quality', type: 'range', label: 'Kalite Seviyesi', min: 10, max: 100, val: 90 } ]
+        options: [{ id: 'format', type: 'select', label: 'Hedef Çıktı Formatı', options: [{ val: 'webp', text: 'WebP (Google Standardı)' }, { val: 'jpg', text: 'JPG (Maksimum Uyumluluk)' }, { val: 'png', text: 'PNG (Şeffaf Kayıpsız)' }] },
+        { id: 'quality', type: 'range', label: 'Kalite Seviyesi', min: 10, max: 100, val: 90 }]
     },
     'vid-audio': {
         title: 't_vid_aud_t', desc: 't_vid_aud_d', icon: 'fa-music', color: 'text-roseNeon', accept: 'video/*', multiple: false, endpoint: '/api/media/extract-audio',
-        options: [ { id: 'format', type: 'select', label: 'Ses Çıktı Formatı', options: [{val:'mp3',text:'MP3 (Sıkıştırılmış)'}, {val:'wav',text:'WAV (Kayıpsız Stüdyo)'}] },
-                   { id: 'bitrate', type: 'select', label: 'Ses Kalitesi (Bitrate)', options: [{val:'320k',text:'320 kbps (Premium)'}, {val:'192k',text:'192 kbps (Standart)'}] } ]
+        options: [{ id: 'format', type: 'select', label: 'Ses Çıktı Formatı', options: [{ val: 'mp3', text: 'MP3 (Sıkıştırılmış)' }, { val: 'wav', text: 'WAV (Kayıpsız Stüdyo)' }] },
+        { id: 'bitrate', type: 'select', label: 'Ses Kalitesi (Bitrate)', options: [{ val: '320k', text: '320 kbps (Premium)' }, { val: '192k', text: '192 kbps (Standart)' }] }]
     }
 };
 
@@ -172,14 +172,14 @@ function openTool(toolId, preloadedFiles = null) {
     document.querySelectorAll('.tool-view').forEach(el => el.classList.add('hidden'));
     const ui = document.getElementById('generic-tool-ui');
     ui.classList.remove('hidden');
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
 
     // Set Meta Info
     document.getElementById('gen-title').setAttribute('data-i18n', config.title);
     document.getElementById('gen-desc').setAttribute('data-i18n', config.desc);
     document.getElementById('gen-title').innerHTML = i18n[currentLang][config.title];
     document.getElementById('gen-desc').innerHTML = i18n[currentLang][config.desc];
-    
+
     const iconEl = document.getElementById('gen-icon');
     iconEl.className = `fa-solid ${config.icon} text-5xl ${config.color} drop-shadow-lg transition-transform group-hover:-translate-y-2`;
     document.getElementById('gen-icon-container').innerHTML = `<i class="fa-solid ${config.icon}"></i>`;
@@ -197,12 +197,12 @@ function openTool(toolId, preloadedFiles = null) {
     // Generate Dynamic Options Form
     const optionsContainer = document.getElementById('gen-options');
     optionsContainer.innerHTML = '';
-    if(config.options && config.options.length > 0) {
+    if (config.options && config.options.length > 0) {
         config.options.forEach(opt => {
             const wrap = document.createElement('div');
             wrap.className = 'flex flex-col bg-slate-900/50 p-4 rounded-xl border border-white/5';
             wrap.innerHTML = `<label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">${opt.label}</label>`;
-            
+
             if (opt.type === 'select') {
                 const sel = document.createElement('select');
                 sel.id = `api-opt-${opt.id}`;
@@ -252,7 +252,7 @@ function resetToolWorkspace() {
 
 function handleFilesSelected(files) {
     if (!files || files.length === 0) return;
-    
+
     // Validation
     if (!currentConfig.multiple && files.length > 1) {
         showToast(currentLang === 'tr' ? 'Lütfen sadece 1 dosya seçin.' : 'Please select only 1 file.', 'error');
@@ -267,9 +267,9 @@ function handleFilesSelected(files) {
 
     const listContainer = document.getElementById('gen-file-list');
     listContainer.innerHTML = '';
-    
+
     currentFiles.forEach(f => {
-        const sizeMb = (f.size / (1024*1024)).toFixed(2);
+        const sizeMb = (f.size / (1024 * 1024)).toFixed(2);
         listContainer.innerHTML += `
             <div class="flex items-center gap-4 p-4 bg-slate-800/80 rounded-xl border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800">
                 <i class="fa-solid ${currentConfig.icon} text-2xl ${currentConfig.color}"></i>
@@ -284,7 +284,7 @@ function handleFilesSelected(files) {
 
 document.getElementById('gen-submit').onclick = async () => {
     if (currentFiles.length === 0) return alert('Dosya yok!');
-    
+
     showApiLoading(true);
 
     const formData = new FormData();
@@ -317,16 +317,16 @@ document.getElementById('gen-submit').onclick = async () => {
         // Simulate returning JSON or Blob based on tool type
         if (currentConfig.endpoint === '/api/media/ocr' || currentConfig.endpoint === '/api/office/convert') {
             const isOcr = currentConfig.endpoint === '/api/media/ocr';
-            const mockText = isOcr ? 
-                `{"status":"success", "text":"[API OCR SONUCU]\\nTarama başarılı. Tüm şemalar ve metinler çıkarıldı.\\nsipsak.com AI Vision Engine V2 aktif."}` : 
+            const mockText = isOcr ?
+                `{"status":"success", "text":"[API OCR SONUCU]\\nTarama başarılı. Tüm şemalar ve metinler çıkarıldı.\\nsipsak.com AI Vision Engine V2 aktif."}` :
                 `{"status":"success", "data":"[API CONVERSION SONUCU]\\n<html>\\n  <body>\\n    <h1>Sipsak Serverless</h1>\\n    <p>Document converted losslessly in backend.</p>\\n  </body>\\n</html>"}`;
-            
+
             handleJsonResponse(JSON.parse(mockText));
         } else {
             // Simulate returning a binary file (PDF, Image, Audio)
             const mockBlob = new Blob(["mock data"], { type: 'application/octet-stream' });
             let ext = currentConfig.endpoint.includes('audio') ? 'wav' : (currentConfig.endpoint.includes('image') ? 'jpg' : 'pdf');
-            
+
             // For format conversions, dynamically get target ext
             const fmtEl = document.getElementById('api-opt-format');
             const tgtFormatEl = document.getElementById('api-opt-targetFormat');
@@ -335,7 +335,7 @@ document.getElementById('gen-submit').onclick = async () => {
 
             handleBlobResponse(mockBlob, `sipsak_processed.${ext}`);
         }
-        
+
         showToast(currentLang === 'tr' ? 'İşlem sunucuda başarıyla tamamlandı!' : 'Processing completed successfully on server!', 'success');
 
     } catch (err) {
@@ -352,15 +352,15 @@ function handleJsonResponse(data) {
     const textRes = document.getElementById('gen-text-result');
     const copyBtn = document.getElementById('gen-copy-btn');
     const dlArea = document.getElementById('gen-download-area');
-    
+
     resArea.classList.remove('hidden');
     resArea.classList.add('flex');
     dlArea.classList.add('hidden');
-    
+
     textRes.classList.remove('hidden');
     copyBtn.classList.remove('hidden');
     copyBtn.classList.add('flex');
-    
+
     textRes.value = data.text || data.data || JSON.stringify(data, null, 2);
 
     copyBtn.onclick = () => {
@@ -377,13 +377,13 @@ function handleBlobResponse(blob, defaultFilename) {
     const copyBtn = document.getElementById('gen-copy-btn');
     const dlArea = document.getElementById('gen-download-area');
     const dlBtn = document.getElementById('gen-download-btn');
-    
+
     resArea.classList.remove('hidden');
     resArea.classList.add('flex');
     textRes.classList.add('hidden');
     copyBtn.classList.add('hidden');
     copyBtn.classList.remove('flex');
-    
+
     dlArea.classList.remove('hidden');
     dlArea.classList.add('flex');
 
