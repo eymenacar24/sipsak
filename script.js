@@ -143,7 +143,7 @@ const apiTools = {
         options: [{ id: 'targetFormat', type: 'select', label: 'Dönüştürülecek Format', options: [{ val: 'pdf', text: 'Standart PDF' }, { val: 'html', text: 'Temiz HTML Kodu' }, { val: 'json', text: 'Gelişmiş JSON Verisi' }] }]
     },
     'img-ocr': {
-        title: 't_img_ocr_t', desc: 't_img_ocr_d', icon: 'fa-eye', color: 'text-yellow-400', accept: 'image/*', multiple: false, endpoint: '/api/media/ocr',
+        title: 't_img_ocr_t', desc: 't_img_ocr_d', icon: 'fa-eye', color: 'text-yellow-400', accept: 'image/*', multiple: false, endpoint: '/api/ocr',
         options: [{ id: 'lang', type: 'select', label: 'Metin Dili (AI Modeli)', options: [{ val: 'auto', text: 'AI Otomatik Algılama' }, { val: 'tur', text: 'Türkçe Gelişmiş' }, { val: 'eng', text: 'İngilizce Standart' }] }]
     },
     'img-format': {
@@ -287,53 +287,55 @@ document.getElementById('gen-submit').onclick = async () => {
 
     showApiLoading(true);
 
-    const formData = new FormData();
-    currentFiles.forEach(f => formData.append('files[]', f));
-
-    // Gather dynamic options
-    if (currentConfig.options) {
-        currentConfig.options.forEach(opt => {
-            const el = document.getElementById(`api-opt-${opt.id}`);
-            if (el) formData.append(opt.id, el.value);
-        });
-    }
-
     try {
-        // PRODUCTION API CALL:
-        /*
-        const response = await fetch(currentConfig.endpoint, {
-            method: 'POST',
-            body: formData,
-            // headers: { 'Authorization': 'Bearer YOUR_SaaS_API_KEY' }
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        */
-
-        // ==========================================
-        // SIMULATION FOR PRODUCTION DEMONSTRATION
-        // ==========================================
-        await new Promise(r => setTimeout(r, 2500)); // Simulate AI/Server processing time
-
-        // Simulate returning JSON or Blob based on tool type
-        if (currentConfig.endpoint === '/api/media/ocr' || currentConfig.endpoint === '/api/office/convert') {
-            const isOcr = currentConfig.endpoint === '/api/media/ocr';
-            const mockText = isOcr ?
-                `{"status":"success", "text":"[API OCR SONUCU]\\nTarama başarılı. Tüm şemalar ve metinler çıkarıldı.\\nsipsak.com AI Vision Engine V2 aktif."}` :
-                `{"status":"success", "data":"[API CONVERSION SONUCU]\\n<html>\\n  <body>\\n    <h1>Sipsak Serverless</h1>\\n    <p>Document converted losslessly in backend.</p>\\n  </body>\\n</html>"}`;
-
-            handleJsonResponse(JSON.parse(mockText));
+        let fetchOptions = {};
+        
+        if (currentConfig.endpoint === '/api/ocr') {
+            const file = currentFiles[0];
+            const base64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+            
+            fetchOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64, mimeType: file.type })
+            };
         } else {
-            // Simulate returning a binary file (PDF, Image, Audio)
-            const mockBlob = new Blob(["mock data"], { type: 'application/octet-stream' });
+            const formData = new FormData();
+            currentFiles.forEach(f => formData.append('files[]', f));
+            if (currentConfig.options) {
+                currentConfig.options.forEach(opt => {
+                    const el = document.getElementById(`api-opt-${opt.id}`);
+                    if (el) formData.append(opt.id, el.value);
+                });
+            }
+            fetchOptions = { method: 'POST', body: formData };
+        }
+
+        const response = await fetch(currentConfig.endpoint, fetchOptions);
+        
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            if (!data.success) throw new Error(data.error || `HTTP ${response.status}`);
+            
+            // Gerçek canlı yanıtı UI'a aktar (Örn: OCR sonucu data.text içine gelir)
+            handleJsonResponse(data);
+        } else {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const blob = await response.blob();
             let ext = currentConfig.endpoint.includes('audio') ? 'wav' : (currentConfig.endpoint.includes('image') ? 'jpg' : 'pdf');
 
-            // For format conversions, dynamically get target ext
             const fmtEl = document.getElementById('api-opt-format');
             const tgtFormatEl = document.getElementById('api-opt-targetFormat');
             if (fmtEl) ext = fmtEl.value;
             if (tgtFormatEl && tgtFormatEl.value !== 'pdf') ext = tgtFormatEl.value;
 
-            handleBlobResponse(mockBlob, `sipsak_processed.${ext}`);
+            handleBlobResponse(blob, `sipsak_processed.${ext}`);
         }
 
         showToast(currentLang === 'tr' ? 'İşlem sunucuda başarıyla tamamlandı!' : 'Processing completed successfully on server!', 'success');
