@@ -289,7 +289,7 @@ document.getElementById('gen-submit').onclick = async () => {
 
     try {
         let fetchOptions = {};
-        
+
         if (currentConfig.endpoint === '/api/ocr') {
             const file = currentFiles[0];
             const base64 = await new Promise((resolve, reject) => {
@@ -298,7 +298,7 @@ document.getElementById('gen-submit').onclick = async () => {
                 reader.onerror = reject;
                 reader.readAsDataURL(file);
             });
-            
+
             fetchOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -317,7 +317,7 @@ document.getElementById('gen-submit').onclick = async () => {
         }
 
         const response = await fetch(currentConfig.endpoint, fetchOptions);
-        
+
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
@@ -362,46 +362,49 @@ document.getElementById('gen-submit').onclick = async () => {
 
 // Handle JSON Response (Text/Data returns)
 function handleJsonResponse(data) {
-    console.log("Gelen Veri:", data);
     const resArea = document.getElementById('gen-result-area');
     const textRes = document.getElementById('gen-text-result');
     const copyBtn = document.getElementById('gen-copy-btn');
     const dlArea = document.getElementById('gen-download-area');
 
-    resArea.classList.remove('hidden');
-    resArea.classList.add('flex');
-    dlArea.classList.add('hidden');
-
-    textRes.classList.remove('hidden');
-    copyBtn.classList.remove('hidden');
-    copyBtn.classList.add('flex');
-
-    const rawText = data.text || data.data || JSON.stringify(data, null, 2);
-    textRes.value = rawText;
-
-    const resultBox = document.querySelector('#result-box, .result-box, .gen-result-content');
-    if (resultBox) {
-        resultBox.innerHTML = '';
-        const pre = document.createElement('pre');
-        pre.className = 'whitespace-pre-wrap font-mono text-sm text-green-400 leading-relaxed';
-        pre.textContent = rawText;
-        resultBox.appendChild(pre);
+    if (resArea) resArea.classList.remove('hidden');
+    if (dlArea) dlArea.classList.add('hidden');
+    if (textRes) textRes.classList.remove('hidden');
+    if (copyBtn) {
+        copyBtn.classList.remove('hidden');
+        copyBtn.classList.add('flex');
     }
 
-    copyBtn.onclick = () => {
-        textRes.select();
-        document.execCommand('copy'); // Fallback
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(rawText).then(() => {
-                showToast('Panoya kopyalandı!', 'success');
-            }).catch(err => {
-                console.error('Clipboard API Error:', err);
-                showToast('Panoya kopyalandı (Fallback)!', 'success');
-            });
-        } else {
-            showToast('Panoya kopyalandı!', 'success');
-        }
-    };
+    // 1. Gelen ham yanıtı yakala
+    const rawResult = data.text || data.data || JSON.stringify(data, null, 2);
+
+    // 2. Mevcut textarea'ya yaz (Geri plan için)
+    if (textRes) textRes.value = rawResult;
+
+    // 🔥 3. EKRANDAKİ ESKİ YAZIYI ZORLA YOK EDEN DARBE:
+    // HTML'deki o siyah paneli veya kutuyu bulup içini yapay zeka çıktısıyla dolduruyoruz.
+    // Projende hangi id kullanılıyorsa hepsini hedef alıyoruz:
+    const targetBox = document.getElementById('result-box') ||
+        document.getElementById('ocr-result') ||
+        document.querySelector('.result-box') ||
+        textRes;
+
+    if (targetBox && targetBox !== textRes) {
+        // Eğer bir div ise içini temizle ve monospaced formatta yapay zekayı bas
+        targetBox.innerHTML = `<pre style="white-space: pre-wrap; font-family: monospace; color: #4ade80; text-align: left;">${rawResult}</pre>`;
+    } else {
+        // Eğer hiçbir kutu bulunamazsa, gizli textarea'yı zorla görünür yap ki sonucu görebilelim
+        textRes.style.display = "block";
+        textRes.style.position = "relative";
+        textRes.style.zIndex = "9999";
+    }
+
+    if (copyBtn) {
+        copyBtn.onclick = () => {
+            navigator.clipboard.writeText(rawResult);
+            showToast('Panoya kopyalandı kanka!', 'success');
+        };
+    }
 }
 
 // Handle Blob Response (File downloads)
