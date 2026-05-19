@@ -129,34 +129,36 @@ window.addEventListener('drop', e => {
 // ==========================================
 // API TOOL CONFIGURATIONS
 // ==========================================
+const API_BASE = 'https://sipsak-xi.vercel.app';
+
 const apiTools = {
     'pdf-split': {
         title: 't_pdf_split_t', desc: 't_pdf_split_d', icon: 'fa-scissors', color: 'text-red-400',
-        accept: 'application/pdf', multiple: false, endpoint: '/api/pdf/split',
+        accept: 'application/pdf', multiple: false, endpoint: `${API_BASE}/api/pdf/split`,
         options: [{ id: 'pageRange', type: 'text', label: 'Sayfa Aralıkları (Örn: 1-5, 8)', placeholder: '1-5' }]
     },
     'pdf-merge': {
         title: 't_pdf_merge_t', desc: 't_pdf_merge_d', icon: 'fa-layer-group', color: 'text-red-400',
-        accept: 'application/pdf', multiple: true, endpoint: '/api/pdf/merge', options: []
+        accept: 'application/pdf', multiple: true, endpoint: `${API_BASE}/api/pdf/merge`, options: []
     },
     'pdf-compress': {
         title: 't_pdf_comp_t', desc: 't_pdf_comp_d', icon: 'fa-compress', color: 'text-red-400',
-        accept: 'application/pdf', multiple: false, endpoint: '/api/pdf/compress',
+        accept: 'application/pdf', multiple: false, endpoint: `${API_BASE}/api/pdf/compress`,
         options: [{ id: 'quality', type: 'select', label: 'Sıkıştırma Algoritması', options: [{ val: 'high', text: 'Maksimum Sıkıştırma' }, { val: 'balanced', text: 'Dengeli (Önerilen)' }, { val: 'lossless', text: 'Kayıpsız' }] }]
     },
     'office-convert': {
         title: 't_off_cvrt_t', desc: 't_off_cvrt_d', icon: 'fa-file-invoice', color: 'text-blue-400',
-        accept: '.docx,.xlsx,.pptx,.doc,.xls', multiple: false, endpoint: '/api/office/convert',
+        accept: '.docx,.xlsx,.pptx,.doc,.xls', multiple: false, endpoint: `${API_BASE}/api/office/convert`,
         options: [{ id: 'targetFormat', type: 'select', label: 'Hedef Format', options: [{ val: 'pdf', text: 'PDF' }, { val: 'html', text: 'HTML' }, { val: 'json', text: 'JSON' }] }]
     },
     'img-ocr': {
         title: 't_img_ocr_t', desc: 't_img_ocr_d', icon: 'fa-eye', color: 'text-yellow-400',
-        accept: 'image/*', multiple: false, endpoint: '/api/ocr',
+        accept: 'image/*', multiple: false, endpoint: `${API_BASE}/api/ocr`,
         options: [{ id: 'lang', type: 'select', label: 'Metin Dili (AI Modeli)', options: [{ val: 'auto', text: 'AI Otomatik Algılama' }, { val: 'tur', text: 'Türkçe' }, { val: 'eng', text: 'İngilizce' }] }]
     },
     'img-format': {
         title: 't_img_fmt_t', desc: 't_img_fmt_d', icon: 'fa-image', color: 'text-purple-400',
-        accept: 'image/*', multiple: false, endpoint: '/api/media/convert-image',
+        accept: 'image/*', multiple: false, endpoint: `${API_BASE}/api/media/convert-image`,
         options: [
             { id: 'format', type: 'select', label: 'Hedef Format', options: [{ val: 'webp', text: 'WebP' }, { val: 'jpg', text: 'JPG' }, { val: 'png', text: 'PNG' }] },
             { id: 'quality', type: 'range', label: 'Kalite', min: 10, max: 100, val: 90 }
@@ -164,7 +166,7 @@ const apiTools = {
     },
     'vid-audio': {
         title: 't_vid_aud_t', desc: 't_vid_aud_d', icon: 'fa-music', color: 'text-roseNeon',
-        accept: 'video/*', multiple: false, endpoint: '/api/media/extract-audio',
+        accept: 'video/*', multiple: false, endpoint: `${API_BASE}/api/media/extract-audio`,
         options: [
             { id: 'format', type: 'select', label: 'Ses Formatı', options: [{ val: 'mp3', text: 'MP3' }, { val: 'wav', text: 'WAV' }] },
             { id: 'bitrate', type: 'select', label: 'Bitrate', options: [{ val: '320k', text: '320 kbps' }, { val: '192k', text: '192 kbps' }] }
