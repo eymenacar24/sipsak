@@ -299,78 +299,84 @@ function handleFilesSelected(files) {
 // ==========================================
 // SUBMIT — THE REAL API FETCH (NO MOCK)
 // ==========================================
-document.getElementById('gen-submit').onclick = async () => {
-    if (currentFiles.length === 0) return showToast('Lütfen önce dosya yükleyin.', 'error');
+const submitBtn = document.getElementById('gen-submit');
+if (submitBtn) {
+    // Önceki listener'ları temizlemek için klonlama (Kurşun Geçirmez Yöntem)
+    const newSubmitBtn = submitBtn.cloneNode(true);
+    submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
 
-    showApiLoading(true, currentConfig.endpoint === '/api/ocr' ? 'Gemini AI Vision analiz ediyor...' : 'Bulut sunucusuna gönderiliyor...');
+    newSubmitBtn.addEventListener('click', async (e) => {
+        e.preventDefault(); // Sayfa yenilenmesini engelle
+        
+        if (currentFiles.length === 0) return showToast('Lütfen önce dosya yükleyin.', 'error');
 
-    try {
-        let fetchOptions = {};
+        showApiLoading(true, currentConfig.endpoint === '/api/ocr' ? 'Gemini AI Vision analiz ediyor...' : 'Bulut sunucusuna gönderiliyor...');
 
-        // OCR: Base64 JSON body
-        if (currentConfig.endpoint === '/api/ocr') {
-            const file = currentFiles[0];
-            const base64 = await fileToBase64(file);
+        try {
+            let fetchOptions = {};
 
-            fetchOptions = {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: base64, mimeType: file.type })
-            };
-        } else {
-            // Other tools: FormData
-            const formData = new FormData();
-            currentFiles.forEach(f => formData.append('files[]', f));
-            if (currentConfig.options) {
-                currentConfig.options.forEach(opt => {
-                    const el = document.getElementById(`api-opt-${opt.id}`);
-                    if (el) formData.append(opt.id, el.value);
-                });
-            }
-            fetchOptions = { method: 'POST', body: formData };
-        }
+            // OCR: Base64 JSON body
+            if (currentConfig.endpoint === '/api/ocr') {
+                const file = currentFiles[0];
+                const base64 = await fileToBase64(file);
 
-        console.log('[SIPSAK] Fetching:', currentConfig.endpoint);
-        const response = await fetch(currentConfig.endpoint, fetchOptions);
-        console.log('[SIPSAK] Response status:', response.status, 'Content-Type:', response.headers.get('content-type'));
-
-        const contentType = response.headers.get('content-type') || '';
-
-        if (contentType.includes('application/json')) {
-            const data = await response.json();
-            console.log('[SIPSAK] JSON data received:', data);
-
-            if (data.success === false) {
-                // API error — show in result area, NOT throw
-                displayResult('API HATA DETAYI:\n\n' + (data.error || 'Bilinmeyen hata'), true);
-                showToast(currentLang === 'tr' ? 'API Hatası!' : 'API Error!', 'error');
+                fetchOptions = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64, mimeType: file.type })
+                };
             } else {
-                // Success — extract text
-                const outputText = data.text || data.data || JSON.stringify(data, null, 2);
-                displayResult(outputText, false);
-                showToast(currentLang === 'tr' ? 'İşlem başarıyla tamamlandı!' : 'Completed successfully!', 'success');
+                // Other tools: FormData
+                const formData = new FormData();
+                currentFiles.forEach(f => formData.append('files[]', f));
+                if (currentConfig.options) {
+                    currentConfig.options.forEach(opt => {
+                        const el = document.getElementById(`api-opt-${opt.id}`);
+                        if (el) formData.append(opt.id, el.value);
+                    });
+                }
+                fetchOptions = { method: 'POST', body: formData };
             }
-        } else {
-            // Binary response (PDF, audio, image)
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const blob = await response.blob();
-            let ext = currentConfig.endpoint.includes('audio') ? 'wav' : (currentConfig.endpoint.includes('image') ? 'jpg' : 'pdf');
-            const fmtEl = document.getElementById('api-opt-format');
-            const tgtEl = document.getElementById('api-opt-targetFormat');
-            if (fmtEl) ext = fmtEl.value;
-            if (tgtEl && tgtEl.value !== 'pdf') ext = tgtEl.value;
-            displayDownload(blob, `sipsak_processed.${ext}`);
-            showToast(currentLang === 'tr' ? 'Dosya hazır!' : 'File ready!', 'success');
-        }
 
-    } catch (err) {
-        console.error('[SIPSAK] CRITICAL ERROR:', err);
-        displayResult('SİSTEM HATASI:\n\n' + err.message, true);
-        showToast(currentLang === 'tr' ? `Bağlantı Hatası: ${err.message}` : `Connection Error: ${err.message}`, 'error');
-    } finally {
-        showApiLoading(false);
-    }
-};
+            console.log('[SIPSAK] Fetching:', currentConfig.endpoint);
+            const response = await fetch(currentConfig.endpoint, fetchOptions);
+            console.log('[SIPSAK] Response status:', response.status, 'Content-Type:', response.headers.get('content-type'));
+
+            const contentType = response.headers.get('content-type') || '';
+
+            if (contentType.includes('application/json')) {
+                const data = await response.json();
+                console.log('[SIPSAK] JSON data received:', data);
+
+                if (data.success === false) {
+                    displayResult('API HATA DETAYI:\n\n' + (data.error || 'Bilinmeyen hata'), true);
+                    showToast(currentLang === 'tr' ? 'API Hatası!' : 'API Error!', 'error');
+                } else {
+                    const outputText = data.text || data.data || JSON.stringify(data, null, 2);
+                    displayResult(outputText, false);
+                    showToast(currentLang === 'tr' ? 'İşlem başarıyla tamamlandı!' : 'Completed successfully!', 'success');
+                }
+            } else {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const blob = await response.blob();
+                let ext = currentConfig.endpoint.includes('audio') ? 'wav' : (currentConfig.endpoint.includes('image') ? 'jpg' : 'pdf');
+                const fmtEl = document.getElementById('api-opt-format');
+                const tgtEl = document.getElementById('api-opt-targetFormat');
+                if (fmtEl) ext = fmtEl.value;
+                if (tgtEl && tgtEl.value !== 'pdf') ext = tgtEl.value;
+                displayDownload(blob, `sipsak_processed.${ext}`);
+                showToast(currentLang === 'tr' ? 'Dosya hazır!' : 'File ready!', 'success');
+            }
+
+        } catch (err) {
+            console.error('[SIPSAK] CRITICAL ERROR:', err);
+            displayResult('SİSTEM HATASI:\n\n' + err.message, true);
+            showToast(currentLang === 'tr' ? `Bağlantı Hatası: ${err.message}` : `Connection Error: ${err.message}`, 'error');
+        } finally {
+            showApiLoading(false);
+        }
+    });
+}
 
 // ==========================================
 // RESULT DISPLAY FUNCTIONS (Tek Kaynak)
