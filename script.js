@@ -321,10 +321,15 @@ document.getElementById('gen-submit').onclick = async () => {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            if (!data.success) throw new Error(data.error || `HTTP ${response.status}`);
-            
-            // Gerçek canlı yanıtı UI'a aktar (Örn: OCR sonucu data.text içine gelir)
-            handleJsonResponse(data);
+            if (!data.success) {
+                // Hata durumunda exception fırlatma, ekrana bas
+                handleJsonResponse({ text: "API HATA DETAYI:\n" + (data.error || `HTTP ${response.status}`) });
+                showToast('İşlem başarısız.', 'error');
+            } else {
+                // Gerçek canlı yanıtı UI'a aktar
+                handleJsonResponse(data);
+                showToast(currentLang === 'tr' ? 'İşlem sunucuda başarıyla tamamlandı!' : 'Processing completed successfully on server!', 'success');
+            }
         } else {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const blob = await response.blob();
@@ -336,13 +341,20 @@ document.getElementById('gen-submit').onclick = async () => {
             if (tgtFormatEl && tgtFormatEl.value !== 'pdf') ext = tgtFormatEl.value;
 
             handleBlobResponse(blob, `sipsak_processed.${ext}`);
+            showToast(currentLang === 'tr' ? 'İşlem sunucuda başarıyla tamamlandı!' : 'Processing completed successfully on server!', 'success');
         }
 
-        showToast(currentLang === 'tr' ? 'İşlem sunucuda başarıyla tamamlandı!' : 'Processing completed successfully on server!', 'success');
-
     } catch (err) {
-        showToast(currentLang === 'tr' ? `Sunucu Hatası: ${err.message}` : `Server Error: ${err.message}`, 'error');
+        showToast(currentLang === 'tr' ? `Sistem Hatası: ${err.message}` : `System Error: ${err.message}`, 'error');
         console.error(err);
+        const resArea = document.getElementById('gen-result-area');
+        const textRes = document.getElementById('gen-text-result');
+        if (resArea && textRes) {
+            resArea.classList.remove('hidden');
+            resArea.classList.add('flex');
+            textRes.classList.remove('hidden');
+            textRes.value = "SİSTEM VE AĞ HATASI:\n" + err.message;
+        }
     } finally {
         showApiLoading(false);
     }
@@ -350,6 +362,7 @@ document.getElementById('gen-submit').onclick = async () => {
 
 // Handle JSON Response (Text/Data returns)
 function handleJsonResponse(data) {
+    console.log("Gelen Veri:", data);
     const resArea = document.getElementById('gen-result-area');
     const textRes = document.getElementById('gen-text-result');
     const copyBtn = document.getElementById('gen-copy-btn');
