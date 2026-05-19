@@ -456,3 +456,11 @@ function fileToBase64(file) {
         reader.readAsDataURL(file);
     });
 }
+
+// ==========================================
+// EXPOSE TO WINDOW FOR INLINE HTML MODULE SCOPE
+// ==========================================
+window.toggleLanguage = toggleLanguage;
+window.showDashboard = showDashboard;
+window.filterCategory = filterCategory;
+window.openTool = openTool;
