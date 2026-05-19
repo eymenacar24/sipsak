@@ -1,9 +1,5 @@
-// c:\Users\Asus\Desktop\sipsak\script.js
-// BUILD: 2026-05-19T03:35 — Statik mock tamamen yok. Gerçek API akışı.
+// Son Guncelleme: Gecenin 04:20'si Vercel bunu zorla gor
 
-// ==========================================
-// TOAST & LOADING SYSTEM
-// ==========================================
 function showToast(msg, type = 'info') {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -309,7 +305,7 @@ if (submitBtn) {
 
     newSubmitBtn.addEventListener('click', async (e) => {
         e.preventDefault(); // Sayfa yenilenmesini engelle
-        
+
         if (currentFiles.length === 0) return showToast('Lütfen önce dosya yükleyin.', 'error');
 
         showApiLoading(true, currentConfig.endpoint === '/api/ocr' ? 'Gemini AI Vision analiz ediyor...' : 'Bulut sunucusuna gönderiliyor...');
