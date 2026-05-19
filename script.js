@@ -363,12 +363,31 @@ function handleJsonResponse(data) {
     copyBtn.classList.remove('hidden');
     copyBtn.classList.add('flex');
 
-    textRes.value = data.text || data.data || JSON.stringify(data, null, 2);
+    const rawText = data.text || data.data || JSON.stringify(data, null, 2);
+    textRes.value = rawText;
+
+    const resultBox = document.querySelector('#result-box, .result-box, .gen-result-content');
+    if (resultBox) {
+        resultBox.innerHTML = '';
+        const pre = document.createElement('pre');
+        pre.className = 'whitespace-pre-wrap font-mono text-sm text-green-400 leading-relaxed';
+        pre.textContent = rawText;
+        resultBox.appendChild(pre);
+    }
 
     copyBtn.onclick = () => {
         textRes.select();
-        document.execCommand('copy');
-        showToast('Panoya kopyalandı!', 'success');
+        document.execCommand('copy'); // Fallback
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(rawText).then(() => {
+                showToast('Panoya kopyalandı!', 'success');
+            }).catch(err => {
+                console.error('Clipboard API Error:', err);
+                showToast('Panoya kopyalandı (Fallback)!', 'success');
+            });
+        } else {
+            showToast('Panoya kopyalandı!', 'success');
+        }
     };
 }
 
