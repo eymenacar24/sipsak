@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="page_title">Sipsak.com - Sıfır Sunucu, Maksimum Gizlilik</title>
+    <title data-i18n="page_title">sipsak.com — Dosya İşleme Platformu</title>
+    <meta name="description" content="PDF, görsel, video ve ofis dosyalarınızı bulut yapay zeka ile saniyeler içinde işleyin. Ücretsiz, hızlı, güvenli.">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -11,223 +12,208 @@
             theme: {
                 extend: {
                     colors: {
-                        night: '#0f172a',
-                        indigoSoft: '#6366f1',
-                        roseNeon: '#f43f5e',
+                        night: '#09090b',
+                        surface: '#18181b',
+                        elevated: '#1c1c1f',
+                        accent: '#818cf8',
+                        accentHover: '#6366f1',
+                        rose: '#fb7185',
+                        emerald: '#34d399',
                     },
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
                     }
                 }
             }
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-<body class="bg-night text-slate-200 min-h-screen font-sans overflow-x-hidden selection:bg-roseNeon selection:text-white flex flex-col relative" id="global-drop-area">
+<body class="bg-night text-zinc-200 min-h-screen font-sans overflow-x-hidden selection:bg-accent/30 selection:text-white flex flex-col relative">
+
+    <!-- Ambient Background -->
+    <div class="ambient-glow" style="top:-15%;left:-5%;width:600px;height:600px;background:#818cf8;"></div>
+    <div class="ambient-glow" style="bottom:-15%;right:-5%;width:500px;height:500px;background:#fb7185;"></div>
 
     <!-- Global Dropzone Overlay -->
-    <div id="global-drop-overlay" class="fixed inset-0 z-[100] bg-indigoSoft/90 backdrop-blur-md hidden flex-col items-center justify-center transition-all duration-300 pointer-events-none">
-        <i class="fa-solid fa-wand-magic-sparkles text-7xl text-white mb-6 animate-bounce"></i>
-        <h2 class="text-4xl md:text-5xl font-bold text-white tracking-widest text-center px-4 drop-shadow-xl" data-i18n="global_drop">ŞİPŞAK İŞLEMEK İÇİN BIRAK!</h2>
-        <p class="text-white/90 mt-4 text-xl font-medium" data-i18n="global_drop_sub">Siz bırakın, AI destekli API otomatik yönlendirsin.</p>
+    <div id="global-drop-overlay" class="fixed inset-0 z-[100] bg-accent/80 backdrop-blur-lg hidden flex-col items-center justify-center pointer-events-none transition-all">
+        <i class="fa-solid fa-arrow-down text-6xl text-white mb-5 animate-bounce"></i>
+        <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight text-center px-4" data-i18n="global_drop">Dosyayı bırakın</h2>
+        <p class="text-white/80 mt-3 text-base font-medium" data-i18n="global_drop_sub">Otomatik olarak doğru araca yönlendirilecek.</p>
     </div>
 
-    <!-- API Loading Overlay (Cloud Processing) -->
+    <!-- Loading Overlay -->
     <div id="api-loading-overlay" class="hidden fixed inset-0 z-[120] bg-night/95 backdrop-blur-xl flex flex-col items-center justify-center fade-in">
-        <div class="relative w-28 h-28 mb-8">
-            <div class="absolute inset-0 border-4 border-slate-800 rounded-full"></div>
-            <div class="absolute inset-0 border-4 border-roseNeon rounded-full border-t-transparent animate-spin"></div>
-            <i class="fa-solid fa-cloud-arrow-up absolute inset-0 m-auto flex items-center justify-center text-4xl text-indigoSoft animate-pulse"></i>
-        </div>
-        <h3 class="text-3xl font-extrabold text-white tracking-widest mb-3" data-i18n="api_loading">BULUTTA İŞLENİYOR</h3>
-        <p class="text-slate-400 font-mono text-sm bg-slate-900 px-4 py-2 rounded-lg border border-white/5" id="api-loading-text">Processing via Cloud AI Engine...</p>
-        
-        <div class="w-72 h-3 bg-slate-800 rounded-full mt-8 overflow-hidden shadow-inner border border-white/5">
-            <div id="api-progress-bar" class="h-full bg-gradient-to-r from-indigoSoft to-roseNeon w-0 transition-all duration-300 shadow-[0_0_10px_rgba(244,63,94,0.5)]"></div>
+        <div class="loading-spinner mb-6"></div>
+        <h3 class="text-lg font-semibold text-white mb-2" data-i18n="api_loading">İşleniyor</h3>
+        <p class="text-zinc-500 font-mono text-xs" id="api-loading-text">Bulut motoruna bağlanılıyor...</p>
+        <div class="w-56 h-1 bg-zinc-800 rounded-full mt-6 overflow-hidden">
+            <div id="api-progress-bar" class="h-full bg-gradient-to-r from-accent to-rose rounded-full w-0 transition-all duration-300"></div>
         </div>
     </div>
 
-    <!-- Toast Notifications Container -->
+    <!-- Toasts -->
     <div id="toast-container"></div>
 
-    <!-- Decorative Gradients -->
-    <div class="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigoSoft rounded-full mix-blend-screen filter blur-[150px] opacity-10 pointer-events-none z-0"></div>
-    <div class="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-roseNeon rounded-full mix-blend-screen filter blur-[150px] opacity-10 pointer-events-none z-0"></div>
-
     <!-- Navbar -->
-    <nav class="glass-panel sticky top-0 z-50 border-b border-white/5 backdrop-blur-xl">
-        <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
+    <nav class="sticky top-0 z-50 border-b border-white/[0.04] bg-night/80 backdrop-blur-xl">
+        <div class="max-w-6xl mx-auto px-4 md:px-6 py-3.5 flex justify-between items-center">
             <div class="flex items-center gap-3 cursor-pointer" onclick="showDashboard()">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigoSoft to-roseNeon flex items-center justify-center shadow-[0_0_15px_rgba(244,63,94,0.4)]">
-                    <i class="fa-solid fa-bolt text-white text-xl"></i>
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-rose flex items-center justify-center">
+                    <i class="fa-solid fa-bolt text-white text-sm"></i>
                 </div>
-                <h1 class="text-2xl font-bold tracking-tight text-white">sipsak<span class="text-roseNeon">.com</span></h1>
+                <span class="text-lg font-semibold tracking-tight text-white">sipsak<span class="text-zinc-500">.com</span></span>
             </div>
-            <div class="flex gap-4 md:gap-6 text-sm font-medium text-slate-300 items-center">
-                <div class="hidden md:flex px-4 py-1.5 rounded-full bg-slate-800 text-green-400 border border-green-400/20 items-center gap-2 shadow-inner">
-                    <i class="fa-solid fa-server"></i> <span data-i18n="nav_api">API Aktif</span>
+            <div class="flex items-center gap-3">
+                <div class="hidden md:flex px-3 py-1 rounded-full bg-emerald/10 text-emerald text-xs font-medium items-center gap-1.5 border border-emerald/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse"></span>
+                    <span data-i18n="nav_api">Çevrimiçi</span>
                 </div>
-                <button onclick="toggleLanguage()" id="lang-btn" class="px-3 md:px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all font-bold text-white flex items-center gap-2 shadow-lg hover:border-indigoSoft/50">
-                    TR <i class="fa-solid fa-globe text-indigoSoft"></i>
+                <button onclick="toggleLanguage()" id="lang-btn" class="px-3 py-1.5 rounded-lg bg-zinc-800/80 border border-zinc-700/50 hover:bg-zinc-700/80 transition-all text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                    TR <i class="fa-solid fa-globe text-zinc-500"></i>
                 </button>
             </div>
         </div>
-        
-        <!-- Categories Tab Bar -->
-        <div class="w-full border-t border-white/5 bg-slate-900/50 overflow-x-auto custom-scrollbar">
-            <div class="max-w-7xl mx-auto flex gap-6 px-6 py-3 min-w-max">
-                <button onclick="filterCategory('all')" class="cat-btn active text-indigoSoft font-bold hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-border-all"></i> <span data-i18n="cat_all">Tümü</span></button>
-                <button onclick="filterCategory('pdf')" class="cat-btn text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-file-pdf text-red-400"></i> PDF Sihirbazı</button>
-                <button onclick="filterCategory('office')" class="cat-btn text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-file-word text-blue-400"></i> Office Modülü</button>
-                <button onclick="filterCategory('image')" class="cat-btn text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-image text-purple-400"></i> Görsel & AI</button>
-                <button onclick="filterCategory('video')" class="cat-btn text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-video text-roseNeon"></i> Medya & Ses</button>
+
+        <!-- Category Tabs -->
+        <div class="border-t border-white/[0.03] overflow-x-auto custom-scrollbar">
+            <div class="max-w-6xl mx-auto flex gap-1 px-4 md:px-6 py-2 min-w-max">
+                <button onclick="filterCategory('all')" class="cat-btn active text-accent font-semibold"><i class="fa-solid fa-grid-2 mr-1.5 text-[11px]"></i> <span data-i18n="cat_all">Tümü</span></button>
+                <button onclick="filterCategory('pdf')" class="cat-btn text-zinc-500">PDF</button>
+                <button onclick="filterCategory('office')" class="cat-btn text-zinc-500">Office</button>
+                <button onclick="filterCategory('image')" class="cat-btn text-zinc-500">Görsel & AI</button>
+                <button onclick="filterCategory('video')" class="cat-btn text-zinc-500">Medya</button>
             </div>
         </div>
     </nav>
 
-    <div id="main-container" class="flex-1 w-full max-w-7xl mx-auto px-4 py-8 z-10 relative">
-        
-        <!-- DASHBOARD VIEW -->
+    <div id="main-container" class="flex-1 w-full max-w-6xl mx-auto px-4 py-10 z-10 relative">
+
+        <!-- DASHBOARD -->
         <div id="dashboard-view" class="fade-in w-full">
-            <div class="text-center py-10 px-4">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-slate-300 mb-6 tracking-widest"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> HYBRID CLOUD ENGINE V2</div>
-                <h2 class="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight text-white">
-                    <span data-i18n="hero_1">Sınırsız Güç.</span> <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigoSoft to-roseNeon" data-i18n="hero_2">Kusursuz Sonuç.</span>
+            <div class="text-center pt-6 pb-12 px-4">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-800/60 border border-zinc-700/40 text-[11px] font-medium text-zinc-400 mb-5 tracking-wide">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald" style="animation: gentlePulse 2s ease infinite;"></span>
+                    CLOUD ENGINE v3
+                </div>
+                <h2 class="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-white leading-[1.15]">
+                    <span data-i18n="hero_1">Dosyalarınızı işleyin.</span><br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-rose" data-i18n="hero_2">Saniyeler içinde.</span>
                 </h2>
-                <p class="text-lg text-slate-400 max-w-2xl mx-auto font-light leading-relaxed" data-i18n="hero_sub">
-                    Amatör kütüphaneleri geride bırakın. Tüm dosyalarınız endüstri standardındaki şifreli yapay zeka sunucularımızda saniyeler içinde sıfır hatayla işlenir.
+                <p class="text-base text-zinc-500 max-w-lg mx-auto leading-relaxed" data-i18n="hero_sub">
+                    PDF, görsel, video ve ofis dosyalarınızı bulut yapay zeka motoruyla hızlıca dönüştürün.
                 </p>
             </div>
 
-            <!-- Ad Space Top -->
-            <div class="w-full max-w-4xl mx-auto h-20 mb-12 glass-panel rounded-xl flex items-center justify-center text-slate-500 text-sm border-dashed border-2 border-slate-700/50 bg-slate-900/50 hover:bg-slate-800 transition-colors cursor-pointer">
-                <span data-i18n="ad_space">[ Reklam Alanı - Premium Sponsor ]</span>
-            </div>
-
             <!-- Tools Grid -->
-            <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
-                <!-- PDF Tools -->
-                <div data-cat="pdf" onclick="openTool('pdf-split')" class="tool-card group cursor-pointer glass-panel p-6 rounded-2xl border border-white/5 hover:border-red-400/50 transition-all duration-300 relative shadow-lg">
-                    <div class="w-12 h-12 rounded-xl bg-red-400/20 text-red-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-scissors text-xl"></i></div>
-                    <h3 class="text-lg font-semibold text-white mb-2" data-i18n="t_pdf_split_t">Bulut PDF Bölücü</h3>
-                    <p class="text-sm text-slate-400" data-i18n="t_pdf_split_d">Sayfa aralığı belirterek PDF'i sunucuda şipşak ayırın.</p>
+            <div id="tools-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-16">
+
+                <!-- PDF -->
+                <div data-cat="pdf" onclick="openTool('pdf-split')" class="tool-card group cursor-pointer bg-zinc-900/50 p-5 rounded-2xl border border-white/[0.04] hover:border-white/[0.08]">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform"><i class="fa-solid fa-scissors text-base"></i></div>
+                    <h3 class="text-[15px] font-semibold text-white mb-1" data-i18n="t_pdf_split_t">PDF Bölücü</h3>
+                    <p class="text-[13px] text-zinc-500 leading-relaxed" data-i18n="t_pdf_split_d">Sayfa aralığı belirleyerek PDF'i hızlıca ayırın.</p>
                 </div>
-                <div data-cat="pdf" onclick="openTool('pdf-merge')" class="tool-card group cursor-pointer glass-panel p-6 rounded-2xl border border-white/5 hover:border-red-400/50 transition-all duration-300 relative shadow-lg">
-                    <div class="w-12 h-12 rounded-xl bg-red-400/20 text-red-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-layer-group text-xl"></i></div>
-                    <h3 class="text-lg font-semibold text-white mb-2" data-i18n="t_pdf_merge_t">Bulut PDF Birleştirici</h3>
-                    <p class="text-sm text-slate-400" data-i18n="t_pdf_merge_d">Yüzlerce PDF'i çökmeksizin tek bir dosyada birleştirin.</p>
+                <div data-cat="pdf" onclick="openTool('pdf-merge')" class="tool-card group cursor-pointer bg-zinc-900/50 p-5 rounded-2xl border border-white/[0.04] hover:border-white/[0.08]">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform"><i class="fa-solid fa-layer-group text-base"></i></div>
+                    <h3 class="text-[15px] font-semibold text-white mb-1" data-i18n="t_pdf_merge_t">PDF Birleştirici</h3>
+                    <p class="text-[13px] text-zinc-500 leading-relaxed" data-i18n="t_pdf_merge_d">Birden fazla PDF'i tek dosyada birleştirin.</p>
                 </div>
-                <div data-cat="pdf" onclick="openTool('pdf-compress')" class="tool-card group cursor-pointer glass-panel p-6 rounded-2xl border border-white/5 hover:border-red-400/50 transition-all duration-300 relative shadow-lg">
-                    <div class="w-12 h-12 rounded-xl bg-red-400/20 text-red-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-compress text-xl"></i></div>
-                    <h3 class="text-lg font-semibold text-white mb-2" data-i18n="t_pdf_comp_t">Gerçek PDF Sıkıştırıcı</h3>
-                    <p class="text-sm text-slate-400" data-i18n="t_pdf_comp_d">Görsel kalitesini optimize ederek devasa boyut tasarrufu sağlayın.</p>
+                <div data-cat="pdf" onclick="openTool('pdf-compress')" class="tool-card group cursor-pointer bg-zinc-900/50 p-5 rounded-2xl border border-white/[0.04] hover:border-white/[0.08]">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform"><i class="fa-solid fa-compress text-base"></i></div>
+                    <h3 class="text-[15px] font-semibold text-white mb-1" data-i18n="t_pdf_comp_t">PDF Sıkıştırıcı</h3>
+                    <p class="text-[13px] text-zinc-500 leading-relaxed" data-i18n="t_pdf_comp_d">Kaliteyi koruyarak dosya boyutunu küçültün.</p>
                 </div>
 
-                <!-- Office Tools -->
-                <div data-cat="office" onclick="openTool('office-convert')" class="tool-card group cursor-pointer glass-panel p-6 rounded-2xl border border-white/5 hover:border-blue-500/50 transition-all duration-300 relative shadow-lg">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-green-500/20 text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-file-invoice text-xl"></i></div>
-                    <h3 class="text-lg font-semibold text-white mb-2" data-i18n="t_off_cvrt_t">Evrensel Belge Dönüştürücü</h3>
-                    <p class="text-sm text-slate-400" data-i18n="t_off_cvrt_d">Word, Excel, PPTX belgelerini kusursuzca PDF, HTML veya JSON formatına çevirin.</p>
+                <!-- Office -->
+                <div data-cat="office" onclick="openTool('office-convert')" class="tool-card group cursor-pointer bg-zinc-900/50 p-5 rounded-2xl border border-white/[0.04] hover:border-white/[0.08]">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform"><i class="fa-solid fa-file-lines text-base"></i></div>
+                    <h3 class="text-[15px] font-semibold text-white mb-1" data-i18n="t_off_cvrt_t">Belge Dönüştürücü</h3>
+                    <p class="text-[13px] text-zinc-500 leading-relaxed" data-i18n="t_off_cvrt_d">Word, Excel, PPTX dosyalarını PDF veya HTML'e çevirin.</p>
                 </div>
 
-                <!-- Image Tools -->
-                <div data-cat="image" onclick="openTool('img-format')" class="tool-card group cursor-pointer glass-panel p-6 rounded-2xl border border-white/5 hover:border-purple-400/50 transition-all duration-300 relative shadow-lg">
-                    <div class="w-12 h-12 rounded-xl bg-purple-400/20 text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-image text-xl"></i></div>
-                    <h3 class="text-lg font-semibold text-white mb-2" data-i18n="t_img_fmt_t">Kayıpsız Görsel Dönüştürücü</h3>
-                    <p class="text-sm text-slate-400" data-i18n="t_img_fmt_d">WebP, PNG, JPG arası formatları yüksek teknolojiyle dönüştürün.</p>
+                <!-- Image -->
+                <div data-cat="image" onclick="openTool('img-format')" class="tool-card group cursor-pointer bg-zinc-900/50 p-5 rounded-2xl border border-white/[0.04] hover:border-white/[0.08]">
+                    <div class="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform"><i class="fa-solid fa-image text-base"></i></div>
+                    <h3 class="text-[15px] font-semibold text-white mb-1" data-i18n="t_img_fmt_t">Görsel Dönüştürücü</h3>
+                    <p class="text-[13px] text-zinc-500 leading-relaxed" data-i18n="t_img_fmt_d">WebP, PNG, JPG formatları arasında dönüştürme yapın.</p>
                 </div>
-                <div data-cat="image" onclick="openTool('img-ocr')" class="tool-card group cursor-pointer glass-panel p-6 rounded-2xl border border-white/5 hover:border-yellow-400/50 transition-all duration-300 relative shadow-lg border-l-2 border-l-yellow-400">
-                    <div class="absolute top-3 right-3 text-[10px] font-bold px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-md border border-yellow-500/50"><i class="fa-solid fa-wand-magic-sparkles"></i> AI</div>
-                    <div class="w-12 h-12 rounded-xl bg-yellow-400/20 text-yellow-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-eye text-xl"></i></div>
-                    <h3 class="text-lg font-semibold text-white mb-2" data-i18n="t_img_ocr_t">Gelişmiş AI OCR Motoru</h3>
-                    <p class="text-sm text-slate-400" data-i18n="t_img_ocr_d">Karmaşık ve el yazısı görselleri bile sıfır hatayla dijital metne çevirin.</p>
+                <div data-cat="image" onclick="openTool('img-ocr')" class="tool-card group cursor-pointer bg-zinc-900/50 p-5 rounded-2xl border border-white/[0.04] hover:border-white/[0.08] relative">
+                    <div class="absolute top-3 right-3 text-[10px] font-semibold px-1.5 py-0.5 bg-amber-500/10 text-amber-400 rounded border border-amber-500/20">AI</div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform"><i class="fa-solid fa-eye text-base"></i></div>
+                    <h3 class="text-[15px] font-semibold text-white mb-1" data-i18n="t_img_ocr_t">AI OCR Motoru</h3>
+                    <p class="text-[13px] text-zinc-500 leading-relaxed" data-i18n="t_img_ocr_d">Görsellerdeki metni yapay zeka ile okuyun.</p>
                 </div>
 
-                <!-- Video Tools -->
-                <div data-cat="video" onclick="openTool('vid-audio')" class="tool-card group cursor-pointer glass-panel p-6 rounded-2xl border border-white/5 hover:border-roseNeon/50 transition-all duration-300 relative shadow-lg">
-                    <div class="w-12 h-12 rounded-xl bg-roseNeon/20 text-roseNeon flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-music text-xl"></i></div>
-                    <h3 class="text-lg font-semibold text-white mb-2" data-i18n="t_vid_aud_t">Sunucu Tabanlı Ses Ayıklayıcı</h3>
-                    <p class="text-sm text-slate-400" data-i18n="t_vid_aud_d">4K Videoların ses kanalını bile çökmeksizin MP3/WAV olarak sökün.</p>
+                <!-- Video -->
+                <div data-cat="video" onclick="openTool('vid-audio')" class="tool-card group cursor-pointer bg-zinc-900/50 p-5 rounded-2xl border border-white/[0.04] hover:border-white/[0.08]">
+                    <div class="w-10 h-10 rounded-xl bg-rose/10 text-rose flex items-center justify-center mb-3 group-hover:scale-105 transition-transform"><i class="fa-solid fa-music text-base"></i></div>
+                    <h3 class="text-[15px] font-semibold text-white mb-1" data-i18n="t_vid_aud_t">Ses Ayıklayıcı</h3>
+                    <p class="text-[13px] text-zinc-500 leading-relaxed" data-i18n="t_vid_aud_d">Videolardan ses kanalını MP3 veya WAV olarak çıkarın.</p>
                 </div>
             </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- UNIVERSAL API WORKSPACE (The Core) -->
-        <!-- ========================================== -->
-        <div id="generic-tool-ui" class="tool-view hidden fade-in w-full max-w-4xl mx-auto flex-col items-center">
+        <!-- WORKSPACE -->
+        <div id="generic-tool-ui" class="tool-view hidden fade-in w-full max-w-3xl mx-auto flex-col items-center">
             <div class="w-full flex justify-between items-center mb-8">
-                <div class="flex items-center gap-4">
-                    <div id="gen-icon-container" class="w-14 h-14 rounded-2xl bg-indigoSoft/20 text-indigoSoft flex items-center justify-center text-2xl shadow-inner">
+                <div class="flex items-center gap-3">
+                    <div id="gen-icon-container" class="w-11 h-11 rounded-xl bg-accent/10 text-accent flex items-center justify-center text-lg">
                         <i id="gen-icon" class="fa-solid fa-cloud"></i>
                     </div>
                     <div>
-                        <h2 id="gen-title" class="text-3xl font-extrabold text-white tracking-tight">API Tool</h2>
-                        <p id="gen-desc" class="text-slate-400 text-sm mt-1">High Performance Backend Task</p>
+                        <h2 id="gen-title" class="text-xl font-bold text-white tracking-tight">Araç</h2>
+                        <p id="gen-desc" class="text-zinc-500 text-[13px]">Açıklama</p>
                     </div>
                 </div>
-                <button onclick="showDashboard()" class="px-5 py-2.5 rounded-xl glass-panel border border-white/10 hover:bg-slate-800 hover:border-slate-600 transition-all text-sm font-bold shadow-lg">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> <span data-i18n="btn_back">Geri Dön</span>
+                <button onclick="showDashboard()" class="px-4 py-2 rounded-lg bg-zinc-800/60 border border-zinc-700/40 hover:bg-zinc-700/60 transition-all text-[13px] font-medium text-zinc-400 hover:text-white">
+                    <i class="fa-solid fa-arrow-left mr-1.5 text-[11px]"></i> <span data-i18n="btn_back">Geri</span>
                 </button>
             </div>
-            
-            <!-- Upload Area -->
-            <div id="gen-drop" class="w-full aspect-[21/9] min-h-[300px] rounded-[2rem] glass-panel flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-indigoSoft/40 hover:border-indigoSoft hover:bg-slate-800/40 transition-all shadow-2xl relative overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-b from-transparent to-indigoSoft/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <i class="fa-solid fa-cloud-arrow-up text-6xl text-indigoSoft mb-6 group-hover:-translate-y-2 transition-transform duration-300 drop-shadow-[0_0_20px_rgba(99,102,241,0.5)]"></i>
-                <h2 class="text-2xl font-bold text-slate-200 tracking-widest group-hover:text-white transition-colors" id="gen-drop-text">DOSYA SEÇ VEYA SÜRÜKLE</h2>
-                <p class="text-slate-500 mt-3 font-mono text-sm uppercase tracking-wider" id="gen-accept-text">Desteklenen formatlar yükleniyor...</p>
+
+            <!-- Upload -->
+            <div id="gen-drop" class="w-full min-h-[240px] rounded-2xl bg-zinc-900/50 flex flex-col items-center justify-center cursor-pointer border border-dashed border-zinc-700/50 hover:border-accent/40 hover:bg-zinc-800/30 transition-all relative group">
+                <i class="fa-solid fa-cloud-arrow-up text-4xl text-zinc-600 mb-4 group-hover:text-accent group-hover:-translate-y-1 transition-all duration-300"></i>
+                <p class="text-sm font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors">Dosya seçin veya sürükleyin</p>
+                <p class="text-zinc-600 mt-2 text-xs" id="gen-accept-text"></p>
                 <input type="file" id="gen-input" class="hidden" multiple>
             </div>
 
-            <!-- Processing Config Area -->
-            <div id="gen-workspace" class="w-full hidden flex-col glass-panel p-8 rounded-[2rem] border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                
-                <!-- File List Display -->
-                <div id="gen-file-list" class="flex flex-col gap-3 mb-8">
-                    <!-- Template for files populated by JS -->
-                </div>
-                
-                <!-- Dynamic Options Form Injected Here -->
-                <div id="gen-options" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"></div>
-                
-                <!-- Submit Action -->
-                <button id="gen-submit" class="w-full bg-gradient-to-r from-indigoSoft to-roseNeon text-white font-extrabold py-5 rounded-2xl shadow-[0_10px_30px_rgba(99,102,241,0.4)] hover:shadow-[0_15px_40px_rgba(244,63,94,0.6)] hover:scale-[1.01] transition-all text-lg tracking-widest flex items-center justify-center gap-3">
-                    <i class="fa-solid fa-bolt text-yellow-300"></i> ŞİPŞAK İŞLE (BULUT API)
+            <!-- Workspace -->
+            <div id="gen-workspace" class="w-full hidden flex-col bg-zinc-900/40 p-6 rounded-2xl border border-white/[0.04]">
+                <div id="gen-file-list" class="flex flex-col gap-2.5 mb-6"></div>
+                <div id="gen-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"></div>
+
+                <button id="gen-submit" class="submit-btn w-full bg-gradient-to-r from-accent to-accentHover text-white font-semibold py-3.5 rounded-xl transition-all text-sm tracking-wide flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-accent/20 active:scale-[0.99]">
+                    <i class="fa-solid fa-bolt text-amber-300 text-xs"></i> İşlemi Başlat
                 </button>
-                
-                <!-- Result Display Area -->
-                <div id="gen-result-area" class="w-full mt-10 pt-8 border-t border-slate-700/50 hidden flex-col">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-sm text-green-400 font-extrabold tracking-widest uppercase flex items-center gap-2"><i class="fa-solid fa-circle-check"></i> Sonuç</span>
-                        <button id="gen-copy-btn" class="bg-slate-700 hover:bg-slate-600 transition-colors px-5 py-2 rounded-xl text-white text-xs font-bold shadow-lg hidden items-center gap-2 border border-slate-600"><i class="fa-solid fa-copy"></i> Tümünü Kopyala</button>
+
+                <!-- Results -->
+                <div id="gen-result-area" class="w-full mt-8 pt-6 border-t border-zinc-800/60 hidden flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs text-emerald font-semibold tracking-wide uppercase flex items-center gap-1.5"><i class="fa-solid fa-check-circle text-[10px]"></i> Sonuç</span>
+                        <button id="gen-copy-btn" class="bg-zinc-800 hover:bg-zinc-700 transition-colors px-3.5 py-1.5 rounded-lg text-zinc-300 text-xs font-medium hidden items-center gap-1.5 border border-zinc-700/50"><i class="fa-solid fa-copy text-[10px]"></i> Kopyala</button>
                     </div>
-                    
-                    <textarea id="gen-text-result" class="w-full h-80 bg-[#0d1117] p-6 text-green-400 text-sm font-mono border border-slate-700 rounded-2xl outline-none resize-none shadow-inner hidden leading-relaxed" readonly></textarea>
-                    
-                    <div id="gen-download-area" class="hidden w-full flex justify-center py-8 bg-slate-900/50 border border-slate-800 rounded-2xl shadow-inner">
-                        <button id="gen-download-btn" class="bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 transition-all px-10 py-4 rounded-2xl text-white font-extrabold shadow-[0_10px_25px_rgba(16,185,129,0.4)] flex items-center gap-3 hover:scale-105 text-lg">
-                            <i class="fa-solid fa-cloud-arrow-down text-2xl"></i> DOSYAYI BİLGİSAYARA İNDİR
+                    <textarea id="gen-text-result" class="result-textarea w-full h-72 p-5 rounded-xl outline-none hidden" readonly></textarea>
+                    <div id="gen-download-area" class="hidden w-full flex justify-center py-6">
+                        <button id="gen-download-btn" class="bg-emerald/90 hover:bg-emerald transition-all px-8 py-3 rounded-xl text-white font-semibold flex items-center gap-2.5 hover:shadow-lg hover:shadow-emerald/20 text-sm">
+                            <i class="fa-solid fa-download"></i> Dosyayı İndir
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 
-    <!-- SEO Content Section -->
-    <section id="seo-section" class="w-full border-t border-slate-800/50 bg-slate-950/80 py-16 mt-12 z-10 relative">
-        <div class="max-w-5xl mx-auto px-6 text-slate-400 text-sm leading-relaxed text-center">
-            <h2 class="text-2xl font-bold text-slate-200 mb-4" data-i18n="seo_h1">sipsak.com - Endüstriyel Web Araçları Altyapısı</h2>
-            <p class="mb-4" data-i18n="seo_p1">Tarayıcı tabanlı amatör çözümleri unutun. sipsak.com hibrit API mimarisi sayesinde en ağır dosyaları bile şifreli, sunucu tabanlı AI modelleriyle anında çözer. Hız, kalite ve %100 gizlilik garantisi.</p>
-            <p>© 2026 sipsak.com. <span data-i18n="seo_rights">Tüm hakları saklıdır.</span></p>
+    <!-- Footer -->
+    <footer class="border-t border-zinc-800/40 py-8 mt-auto z-10 relative">
+        <div class="max-w-5xl mx-auto px-6 text-center">
+            <p class="text-zinc-600 text-xs">© 2026 sipsak.com · <span data-i18n="seo_rights">Tüm hakları saklıdır.</span></p>
         </div>
-    </section>
+    </footer>
 
-    <script src="script.js?v=999"></script>
+    <script src="script.js?v=1001"></script>
 </body>
 </html>
