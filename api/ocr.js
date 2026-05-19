@@ -1,30 +1,66 @@
 module.exports = async (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ success: false, error: 'Yalnızca POST istekleri kabul edilir.' });
     }
+
     try {
-        const { image } = req.body; 
-        if (!image) return res.status(400).json({ success: false, error: 'Görsel verisi bulunamadı.' });
+        const { image, mimeType } = req.body;
 
-        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        if (!image) {
+            return res.status(400).json({ success: false, error: 'Görsel verisi (image) eksik.' });
+        }
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            return res.status(500).json({ success: false, error: 'Sunucu yapılandırma hatası: GEMINI_API_KEY tanımlı değil.' });
+        }
+
+        const base64Data = image.replace(/^data:image\/[a-zA-Z+]+;base64,/, "");
+        const resolvedMime = mimeType || 'image/jpeg';
+
+        const prompt = "Sen endüstriyel seviyede bir OCR, görsel analiz ve döküman okuma motorusun. Sana yüklenen bu görseldeki tüm metinleri, şemaları, pin isimlerini, teknik detayları ve kodları sıfır hata ile ayıkla. Eğer görsel bir elektronik devre şeması, mikrokontrolcü pinout'u (Örn: ESP32 GPIO) veya teknik bir afiş ise; pin hiyerarşilerini, işlevlerini ve isimlerini yazılımcıların en rahat okuyacağı şekilde çok düzenli, hizalı bir Markdown tablosu veya organize bir liste olarak dök. Giriş veya sonuç yorumu yapma, doğrudan teknik çıktıyı ver.";
+
+        const payload = {
+            contents: [{
+                parts: [
+                    { text: prompt },
+                    { inlineData: { mimeType: resolvedMime, data: base64Data } }
+                ]
+            }]
+        };
+
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(geminiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: "Sen endüstriyel seviyede bir OCR, görsel analiz ve döküman okuma motorusun. Sana yüklenen bu görseldeki tüm metinleri, şemaları, pin isimlerini, teknik detayları ve kodları sıfır hata ile ayıkla. Eğer görsel bir elektronik devre şeması, mikrokontrolcü pinout'u (Örn: ESP32 GPIO) ise; pin hiyerarşilerini ve isimlerini çok düzenli bir Markdown tablosu olarak dök. Giriş veya sonuç yorumu yapma, doğrudan teknik çıktıyı ver." },
-                        { inlineData: { mimeType: "image/jpeg", data: base64Data } }
-                    ]
-                }]
-            })
+            body: JSON.stringify(payload)
         });
 
         const data = await response.json();
-        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Metin okunamadı.";
-        return res.status(200).json({ success: true, text: responseText });
+
+        if (!response.ok) {
+            const errMsg = data.error?.message || JSON.stringify(data);
+            return res.status(response.status).json({ success: false, error: `Gemini API Hatası (${response.status}): ${errMsg}` });
+        }
+
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) {
+            return res.status(200).json({ success: false, error: 'Görselden metin çıkartılamadı. Gemini boş yanıt döndü.' });
+        }
+
+        return res.status(200).json({ success: true, text: text });
+
     } catch (error) {
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, error: 'Sunucu İç Hatası: ' + error.message });
     }
 };

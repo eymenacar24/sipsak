@@ -1,14 +1,15 @@
 // c:\Users\Asus\Desktop\sipsak\script.js
+// BUILD: 2026-05-19T03:35 — Statik mock tamamen yok. Gerçek API akışı.
 
 // ==========================================
-// TOAST & LOADING SYSTEM (Premium UX)
+// TOAST & LOADING SYSTEM
 // ==========================================
 function showToast(msg, type = 'info') {
     const container = document.getElementById('toast-container');
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    let icon = type === 'success' ? 'fa-check text-green-400' : (type === 'error' ? 'fa-xmark text-red-400' : 'fa-info-circle text-indigoSoft');
+    const icon = type === 'success' ? 'fa-check text-green-400' : (type === 'error' ? 'fa-xmark text-red-400' : 'fa-info-circle text-indigoSoft');
     toast.innerHTML = `<i class="fa-solid ${icon} text-xl"></i> <span>${msg}</span>`;
     container.appendChild(toast);
     setTimeout(() => {
@@ -17,20 +18,21 @@ function showToast(msg, type = 'info') {
     }, 4000);
 }
 
-function showApiLoading(show) {
+function showApiLoading(show, statusText) {
     const overlay = document.getElementById('api-loading-overlay');
     const bar = document.getElementById('api-progress-bar');
+    const loadingText = document.getElementById('api-loading-text');
     if (show) {
         overlay.classList.remove('hidden');
         overlay.classList.add('flex');
         bar.style.width = '0%';
-        // Simulate progress for UI feedback during fetch
+        if (loadingText && statusText) loadingText.textContent = statusText;
         let progress = 0;
         window.apiProgressInterval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress > 90) progress = 90;
+            progress += Math.random() * 12;
+            if (progress > 92) progress = 92;
             bar.style.width = `${progress}%`;
-        }, 300);
+        }, 350);
     } else {
         clearInterval(window.apiProgressInterval);
         bar.style.width = '100%';
@@ -86,7 +88,9 @@ function toggleLanguage() {
     showToast(currentLang === 'tr' ? 'Sistem dili Türkçe.' : 'System language English.', 'success');
 }
 
-// Global UI Routers
+// ==========================================
+// UI ROUTING
+// ==========================================
 function showDashboard() {
     document.querySelectorAll('.tool-view').forEach(el => el.classList.add('hidden'));
     document.getElementById('dashboard-view').classList.remove('hidden');
@@ -97,12 +101,13 @@ function filterCategory(cat) {
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active', 'text-indigoSoft', 'font-bold'));
     event.currentTarget.classList.add('active', 'text-indigoSoft', 'font-bold');
     document.querySelectorAll('.tool-card').forEach(card => {
-        if (cat === 'all' || card.dataset.cat === cat) card.style.display = 'block';
-        else card.style.display = 'none';
+        card.style.display = (cat === 'all' || card.dataset.cat === cat) ? 'block' : 'none';
     });
 }
 
-// Smart Dropzone Global Routing
+// ==========================================
+// SMART DROPZONE
+// ==========================================
 const globalOverlay = document.getElementById('global-drop-overlay');
 let dragCounter = 0;
 window.addEventListener('dragenter', e => { e.preventDefault(); dragCounter++; globalOverlay.classList.remove('hidden'); globalOverlay.classList.add('flex'); });
@@ -113,88 +118,93 @@ window.addEventListener('drop', e => {
     if (e.dataTransfer.files.length > 0) {
         const file = e.dataTransfer.files[0];
         const name = file.name.toLowerCase();
-
         if (name.endsWith('.pdf')) openTool('pdf-split', e.dataTransfer.files);
         else if (name.endsWith('.docx') || name.endsWith('.xlsx') || name.endsWith('.pptx')) openTool('office-convert', e.dataTransfer.files);
-        else if (file.type.startsWith('image/')) openTool('img-ocr', e.dataTransfer.files); // Default to OCR for smart drop
+        else if (file.type.startsWith('image/')) openTool('img-ocr', e.dataTransfer.files);
         else if (file.type.startsWith('video/')) openTool('vid-audio', e.dataTransfer.files);
         else showToast(currentLang === 'tr' ? 'Desteklenmeyen dosya türü!' : 'Unsupported file type!', 'error');
     }
 });
 
-
 // ==========================================
-// UNIVERSAL API TOOL CONFIGURATION
+// API TOOL CONFIGURATIONS
 // ==========================================
 const apiTools = {
     'pdf-split': {
-        title: 't_pdf_split_t', desc: 't_pdf_split_d', icon: 'fa-scissors', color: 'text-red-400', accept: 'application/pdf', multiple: false, endpoint: '/api/pdf/split',
+        title: 't_pdf_split_t', desc: 't_pdf_split_d', icon: 'fa-scissors', color: 'text-red-400',
+        accept: 'application/pdf', multiple: false, endpoint: '/api/pdf/split',
         options: [{ id: 'pageRange', type: 'text', label: 'Sayfa Aralıkları (Örn: 1-5, 8)', placeholder: '1-5' }]
     },
     'pdf-merge': {
-        title: 't_pdf_merge_t', desc: 't_pdf_merge_d', icon: 'fa-layer-group', color: 'text-red-400', accept: 'application/pdf', multiple: true, endpoint: '/api/pdf/merge', options: []
+        title: 't_pdf_merge_t', desc: 't_pdf_merge_d', icon: 'fa-layer-group', color: 'text-red-400',
+        accept: 'application/pdf', multiple: true, endpoint: '/api/pdf/merge', options: []
     },
     'pdf-compress': {
-        title: 't_pdf_comp_t', desc: 't_pdf_comp_d', icon: 'fa-compress', color: 'text-red-400', accept: 'application/pdf', multiple: false, endpoint: '/api/pdf/compress',
-        options: [{ id: 'quality', type: 'select', label: 'Sıkıştırma Algoritması', options: [{ val: 'high', text: 'Maksimum Sıkıştırma (Düşük Boyut)' }, { val: 'balanced', text: 'Dengeli (Önerilen)' }, { val: 'lossless', text: 'Kayıpsız Optimizasyon' }] }]
+        title: 't_pdf_comp_t', desc: 't_pdf_comp_d', icon: 'fa-compress', color: 'text-red-400',
+        accept: 'application/pdf', multiple: false, endpoint: '/api/pdf/compress',
+        options: [{ id: 'quality', type: 'select', label: 'Sıkıştırma Algoritması', options: [{ val: 'high', text: 'Maksimum Sıkıştırma' }, { val: 'balanced', text: 'Dengeli (Önerilen)' }, { val: 'lossless', text: 'Kayıpsız' }] }]
     },
     'office-convert': {
-        title: 't_off_cvrt_t', desc: 't_off_cvrt_d', icon: 'fa-file-invoice', color: 'text-blue-400', accept: '.docx,.xlsx,.pptx,.doc,.xls', multiple: false, endpoint: '/api/office/convert',
-        options: [{ id: 'targetFormat', type: 'select', label: 'Dönüştürülecek Format', options: [{ val: 'pdf', text: 'Standart PDF' }, { val: 'html', text: 'Temiz HTML Kodu' }, { val: 'json', text: 'Gelişmiş JSON Verisi' }] }]
+        title: 't_off_cvrt_t', desc: 't_off_cvrt_d', icon: 'fa-file-invoice', color: 'text-blue-400',
+        accept: '.docx,.xlsx,.pptx,.doc,.xls', multiple: false, endpoint: '/api/office/convert',
+        options: [{ id: 'targetFormat', type: 'select', label: 'Hedef Format', options: [{ val: 'pdf', text: 'PDF' }, { val: 'html', text: 'HTML' }, { val: 'json', text: 'JSON' }] }]
     },
     'img-ocr': {
-        title: 't_img_ocr_t', desc: 't_img_ocr_d', icon: 'fa-eye', color: 'text-yellow-400', accept: 'image/*', multiple: false, endpoint: '/api/ocr',
-        options: [{ id: 'lang', type: 'select', label: 'Metin Dili (AI Modeli)', options: [{ val: 'auto', text: 'AI Otomatik Algılama' }, { val: 'tur', text: 'Türkçe Gelişmiş' }, { val: 'eng', text: 'İngilizce Standart' }] }]
+        title: 't_img_ocr_t', desc: 't_img_ocr_d', icon: 'fa-eye', color: 'text-yellow-400',
+        accept: 'image/*', multiple: false, endpoint: '/api/ocr',
+        options: [{ id: 'lang', type: 'select', label: 'Metin Dili (AI Modeli)', options: [{ val: 'auto', text: 'AI Otomatik Algılama' }, { val: 'tur', text: 'Türkçe' }, { val: 'eng', text: 'İngilizce' }] }]
     },
     'img-format': {
-        title: 't_img_fmt_t', desc: 't_img_fmt_d', icon: 'fa-image', color: 'text-purple-400', accept: 'image/*', multiple: false, endpoint: '/api/media/convert-image',
-        options: [{ id: 'format', type: 'select', label: 'Hedef Çıktı Formatı', options: [{ val: 'webp', text: 'WebP (Google Standardı)' }, { val: 'jpg', text: 'JPG (Maksimum Uyumluluk)' }, { val: 'png', text: 'PNG (Şeffaf Kayıpsız)' }] },
-        { id: 'quality', type: 'range', label: 'Kalite Seviyesi', min: 10, max: 100, val: 90 }]
+        title: 't_img_fmt_t', desc: 't_img_fmt_d', icon: 'fa-image', color: 'text-purple-400',
+        accept: 'image/*', multiple: false, endpoint: '/api/media/convert-image',
+        options: [
+            { id: 'format', type: 'select', label: 'Hedef Format', options: [{ val: 'webp', text: 'WebP' }, { val: 'jpg', text: 'JPG' }, { val: 'png', text: 'PNG' }] },
+            { id: 'quality', type: 'range', label: 'Kalite', min: 10, max: 100, val: 90 }
+        ]
     },
     'vid-audio': {
-        title: 't_vid_aud_t', desc: 't_vid_aud_d', icon: 'fa-music', color: 'text-roseNeon', accept: 'video/*', multiple: false, endpoint: '/api/media/extract-audio',
-        options: [{ id: 'format', type: 'select', label: 'Ses Çıktı Formatı', options: [{ val: 'mp3', text: 'MP3 (Sıkıştırılmış)' }, { val: 'wav', text: 'WAV (Kayıpsız Stüdyo)' }] },
-        { id: 'bitrate', type: 'select', label: 'Ses Kalitesi (Bitrate)', options: [{ val: '320k', text: '320 kbps (Premium)' }, { val: '192k', text: '192 kbps (Standart)' }] }]
+        title: 't_vid_aud_t', desc: 't_vid_aud_d', icon: 'fa-music', color: 'text-roseNeon',
+        accept: 'video/*', multiple: false, endpoint: '/api/media/extract-audio',
+        options: [
+            { id: 'format', type: 'select', label: 'Ses Formatı', options: [{ val: 'mp3', text: 'MP3' }, { val: 'wav', text: 'WAV' }] },
+            { id: 'bitrate', type: 'select', label: 'Bitrate', options: [{ val: '320k', text: '320 kbps' }, { val: '192k', text: '192 kbps' }] }
+        ]
     }
 };
 
 let currentConfig = null;
 let currentFiles = [];
 
-function openTool(toolId, preloadedFiles = null) {
+// ==========================================
+// TOOL OPEN & UI BUILDER
+// ==========================================
+function openTool(toolId, preloadedFiles) {
     const config = apiTools[toolId];
-    if (!config) return alert('Config bulunamadı!');
+    if (!config) return showToast('Araç bulunamadı!', 'error');
     currentConfig = config;
     currentFiles = [];
 
-    // Hide Dashboard, Show Generic Tool
     document.getElementById('dashboard-view').classList.add('hidden');
     document.querySelectorAll('.tool-view').forEach(el => el.classList.add('hidden'));
-    const ui = document.getElementById('generic-tool-ui');
-    ui.classList.remove('hidden');
+    document.getElementById('generic-tool-ui').classList.remove('hidden');
     window.scrollTo(0, 0);
 
-    // Set Meta Info
-    document.getElementById('gen-title').setAttribute('data-i18n', config.title);
-    document.getElementById('gen-desc').setAttribute('data-i18n', config.desc);
-    document.getElementById('gen-title').innerHTML = i18n[currentLang][config.title];
-    document.getElementById('gen-desc').innerHTML = i18n[currentLang][config.desc];
-
-    const iconEl = document.getElementById('gen-icon');
-    iconEl.className = `fa-solid ${config.icon} text-5xl ${config.color} drop-shadow-lg transition-transform group-hover:-translate-y-2`;
+    // Meta
+    document.getElementById('gen-title').innerHTML = i18n[currentLang][config.title] || config.title;
+    document.getElementById('gen-desc').innerHTML = i18n[currentLang][config.desc] || config.desc;
     document.getElementById('gen-icon-container').innerHTML = `<i class="fa-solid ${config.icon}"></i>`;
     document.getElementById('gen-icon-container').className = `w-14 h-14 rounded-2xl bg-slate-800 ${config.color} flex items-center justify-center text-2xl shadow-inner border border-white/5`;
 
-    // Set Input attributes
+    // Input
     const fileInput = document.getElementById('gen-input');
     fileInput.accept = config.accept;
     fileInput.multiple = config.multiple;
     document.getElementById('gen-accept-text').innerText = `Kabul Edilen: ${config.accept}`;
 
-    // Reset Workspaces
+    // Reset
     resetToolWorkspace();
 
-    // Generate Dynamic Options Form
+    // Options
     const optionsContainer = document.getElementById('gen-options');
     optionsContainer.innerHTML = '';
     if (config.options && config.options.length > 0) {
@@ -211,7 +221,7 @@ function openTool(toolId, preloadedFiles = null) {
                 wrap.appendChild(sel);
             } else if (opt.type === 'text') {
                 const inp = document.createElement('input');
-                inp.type = 'text'; inp.id = `api-opt-${opt.id}`; inp.placeholder = opt.placeholder;
+                inp.type = 'text'; inp.id = `api-opt-${opt.id}`; inp.placeholder = opt.placeholder || '';
                 inp.className = 'w-full bg-slate-800 text-white px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-indigoSoft border border-slate-700 font-mono';
                 wrap.appendChild(inp);
             } else if (opt.type === 'range') {
@@ -220,7 +230,7 @@ function openTool(toolId, preloadedFiles = null) {
                 inp.type = 'range'; inp.id = `api-opt-${opt.id}`; inp.min = opt.min; inp.max = opt.max; inp.value = opt.val;
                 inp.className = 'w-full accent-indigoSoft';
                 const valDisp = document.createElement('span'); valDisp.className = 'text-indigoSoft font-bold font-mono min-w-[3rem] text-right'; valDisp.innerText = opt.val;
-                inp.oninput = (e) => valDisp.innerText = e.target.value;
+                inp.oninput = () => valDisp.innerText = inp.value;
                 rWrap.appendChild(inp); rWrap.appendChild(valDisp);
                 wrap.appendChild(rWrap);
             }
@@ -231,9 +241,8 @@ function openTool(toolId, preloadedFiles = null) {
         optionsContainer.classList.add('hidden');
     }
 
-    // Bind File Events
-    const dropArea = document.getElementById('gen-drop');
-    dropArea.onclick = () => fileInput.click();
+    // Events
+    document.getElementById('gen-drop').onclick = () => fileInput.click();
     fileInput.onchange = (e) => handleFilesSelected(e.target.files);
 
     if (preloadedFiles) handleFilesSelected(preloadedFiles);
@@ -241,19 +250,24 @@ function openTool(toolId, preloadedFiles = null) {
 
 function resetToolWorkspace() {
     document.getElementById('gen-drop').classList.remove('hidden');
-    document.getElementById('gen-workspace').classList.add('hidden');
+    const ws = document.getElementById('gen-workspace');
+    ws.classList.add('hidden');
+    ws.classList.remove('flex');
     document.getElementById('gen-result-area').classList.add('hidden');
+    document.getElementById('gen-result-area').classList.remove('flex');
     document.getElementById('gen-text-result').classList.add('hidden');
+    document.getElementById('gen-text-result').value = '';
     document.getElementById('gen-copy-btn').classList.add('hidden');
+    document.getElementById('gen-copy-btn').classList.remove('flex');
     document.getElementById('gen-download-area').classList.add('hidden');
+    document.getElementById('gen-download-area').classList.remove('flex');
+    document.getElementById('gen-file-list').innerHTML = '';
     document.getElementById('gen-input').value = '';
     currentFiles = [];
 }
 
 function handleFilesSelected(files) {
     if (!files || files.length === 0) return;
-
-    // Validation
     if (!currentConfig.multiple && files.length > 1) {
         showToast(currentLang === 'tr' ? 'Lütfen sadece 1 dosya seçin.' : 'Please select only 1 file.', 'error');
         currentFiles = [files[0]];
@@ -262,16 +276,16 @@ function handleFilesSelected(files) {
     }
 
     document.getElementById('gen-drop').classList.add('hidden');
-    document.getElementById('gen-workspace').classList.remove('hidden');
-    document.getElementById('gen-workspace').classList.add('flex');
+    const ws = document.getElementById('gen-workspace');
+    ws.classList.remove('hidden');
+    ws.classList.add('flex');
 
     const listContainer = document.getElementById('gen-file-list');
     listContainer.innerHTML = '';
-
     currentFiles.forEach(f => {
         const sizeMb = (f.size / (1024 * 1024)).toFixed(2);
         listContainer.innerHTML += `
-            <div class="flex items-center gap-4 p-4 bg-slate-800/80 rounded-xl border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800">
+            <div class="flex items-center gap-4 p-4 bg-slate-800/80 rounded-xl border border-slate-700/50 shadow-sm">
                 <i class="fa-solid ${currentConfig.icon} text-2xl ${currentConfig.color}"></i>
                 <div class="flex-1 overflow-hidden">
                     <h4 class="text-white font-bold truncate">${f.name}</h4>
@@ -282,22 +296,21 @@ function handleFilesSelected(files) {
     });
 }
 
+// ==========================================
+// SUBMIT — THE REAL API FETCH (NO MOCK)
+// ==========================================
 document.getElementById('gen-submit').onclick = async () => {
-    if (currentFiles.length === 0) return alert('Dosya yok!');
+    if (currentFiles.length === 0) return showToast('Lütfen önce dosya yükleyin.', 'error');
 
-    showApiLoading(true);
+    showApiLoading(true, currentConfig.endpoint === '/api/ocr' ? 'Gemini AI Vision analiz ediyor...' : 'Bulut sunucusuna gönderiliyor...');
 
     try {
         let fetchOptions = {};
 
+        // OCR: Base64 JSON body
         if (currentConfig.endpoint === '/api/ocr') {
             const file = currentFiles[0];
-            const base64 = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
+            const base64 = await fileToBase64(file);
 
             fetchOptions = {
                 method: 'POST',
@@ -305,6 +318,7 @@ document.getElementById('gen-submit').onclick = async () => {
                 body: JSON.stringify({ image: base64, mimeType: file.type })
             };
         } else {
+            // Other tools: FormData
             const formData = new FormData();
             currentFiles.forEach(f => formData.append('files[]', f));
             if (currentConfig.options) {
@@ -316,98 +330,90 @@ document.getElementById('gen-submit').onclick = async () => {
             fetchOptions = { method: 'POST', body: formData };
         }
 
+        console.log('[SIPSAK] Fetching:', currentConfig.endpoint);
         const response = await fetch(currentConfig.endpoint, fetchOptions);
+        console.log('[SIPSAK] Response status:', response.status, 'Content-Type:', response.headers.get('content-type'));
 
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
+        const contentType = response.headers.get('content-type') || '';
+
+        if (contentType.includes('application/json')) {
             const data = await response.json();
-            if (!data.success) {
-                // Hata durumunda exception fırlatma, ekrana bas
-                handleJsonResponse({ text: "API HATA DETAYI:\n" + (data.error || `HTTP ${response.status}`) });
-                showToast('İşlem başarısız.', 'error');
+            console.log('[SIPSAK] JSON data received:', data);
+
+            if (data.success === false) {
+                // API error — show in result area, NOT throw
+                displayResult('API HATA DETAYI:\n\n' + (data.error || 'Bilinmeyen hata'), true);
+                showToast(currentLang === 'tr' ? 'API Hatası!' : 'API Error!', 'error');
             } else {
-                // Gerçek canlı yanıtı UI'a aktar
-                handleJsonResponse(data);
-                showToast(currentLang === 'tr' ? 'İşlem sunucuda başarıyla tamamlandı!' : 'Processing completed successfully on server!', 'success');
+                // Success — extract text
+                const outputText = data.text || data.data || JSON.stringify(data, null, 2);
+                displayResult(outputText, false);
+                showToast(currentLang === 'tr' ? 'İşlem başarıyla tamamlandı!' : 'Completed successfully!', 'success');
             }
         } else {
+            // Binary response (PDF, audio, image)
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const blob = await response.blob();
             let ext = currentConfig.endpoint.includes('audio') ? 'wav' : (currentConfig.endpoint.includes('image') ? 'jpg' : 'pdf');
-
             const fmtEl = document.getElementById('api-opt-format');
-            const tgtFormatEl = document.getElementById('api-opt-targetFormat');
+            const tgtEl = document.getElementById('api-opt-targetFormat');
             if (fmtEl) ext = fmtEl.value;
-            if (tgtFormatEl && tgtFormatEl.value !== 'pdf') ext = tgtFormatEl.value;
-
-            handleBlobResponse(blob, `sipsak_processed.${ext}`);
-            showToast(currentLang === 'tr' ? 'İşlem sunucuda başarıyla tamamlandı!' : 'Processing completed successfully on server!', 'success');
+            if (tgtEl && tgtEl.value !== 'pdf') ext = tgtEl.value;
+            displayDownload(blob, `sipsak_processed.${ext}`);
+            showToast(currentLang === 'tr' ? 'Dosya hazır!' : 'File ready!', 'success');
         }
 
     } catch (err) {
-        showToast(currentLang === 'tr' ? `Sistem Hatası: ${err.message}` : `System Error: ${err.message}`, 'error');
-        console.error(err);
-        const resArea = document.getElementById('gen-result-area');
-        const textRes = document.getElementById('gen-text-result');
-        if (resArea && textRes) {
-            resArea.classList.remove('hidden');
-            resArea.classList.add('flex');
-            textRes.classList.remove('hidden');
-            textRes.value = "SİSTEM VE AĞ HATASI:\n" + err.message;
-        }
+        console.error('[SIPSAK] CRITICAL ERROR:', err);
+        displayResult('SİSTEM HATASI:\n\n' + err.message, true);
+        showToast(currentLang === 'tr' ? `Bağlantı Hatası: ${err.message}` : `Connection Error: ${err.message}`, 'error');
     } finally {
         showApiLoading(false);
     }
 };
 
-// Handle JSON Response (Text/Data returns)
-function handleJsonResponse(data) {
+// ==========================================
+// RESULT DISPLAY FUNCTIONS (Tek Kaynak)
+// ==========================================
+function displayResult(text, isError) {
     const resArea = document.getElementById('gen-result-area');
     const textRes = document.getElementById('gen-text-result');
     const copyBtn = document.getElementById('gen-copy-btn');
     const dlArea = document.getElementById('gen-download-area');
 
-    if (resArea) resArea.classList.remove('hidden');
-    if (dlArea) dlArea.classList.add('hidden');
-    if (textRes) textRes.classList.remove('hidden');
-    if (copyBtn) {
-        copyBtn.classList.remove('hidden');
-        copyBtn.classList.add('flex');
-    }
+    // Reset all
+    resArea.classList.remove('hidden');
+    resArea.classList.add('flex');
+    dlArea.classList.add('hidden');
+    dlArea.classList.remove('flex');
 
-    // 1. Gelen ham yanıtı yakala
-    const rawResult = data.text || data.data || JSON.stringify(data, null, 2);
+    // Show textarea
+    textRes.classList.remove('hidden');
+    textRes.value = text;
+    textRes.style.color = isError ? '#f87171' : '#4ade80';
 
-    // 2. Mevcut textarea'ya yaz (Geri plan için)
-    if (textRes) textRes.value = rawResult;
+    // Show copy button
+    copyBtn.classList.remove('hidden');
+    copyBtn.classList.add('flex');
+    copyBtn.onclick = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => showToast('Panoya kopyalandı!', 'success')).catch(() => fallbackCopy(textRes));
+        } else {
+            fallbackCopy(textRes);
+        }
+    };
 
-    // 🔥 3. EKRANDAKİ ESKİ YAZIYI ZORLA YOK EDEN DARBE:
-    // HTML'deki o siyah paneli veya kutuyu bulup içini yapay zeka çıktısıyla dolduruyoruz.
-    // Projende hangi id kullanılıyorsa hepsini hedef alıyoruz:
-    const targetBox = document.getElementById('result-box') ||
-        document.getElementById('ocr-result') ||
-        document.querySelector('.result-box') ||
-        textRes;
-
-    if (targetBox && targetBox !== textRes) {
-        // Eğer bir div ise içini temizle ve monospaced formatta yapay zekayı bas
-        targetBox.innerHTML = `<pre style="white-space: pre-wrap; font-family: monospace; color: #4ade80; text-align: left;">${rawResult}</pre>`;
-    } else {
-        // Eğer hiçbir kutu bulunamazsa, gizli textarea'yı zorla görünür yap ki sonucu görebilelim
-        textRes.style.display = "block";
-        textRes.style.position = "relative";
-        textRes.style.zIndex = "9999";
-    }
-
-    if (copyBtn) {
-        copyBtn.onclick = () => {
-            navigator.clipboard.writeText(rawResult);
-            showToast('Panoya kopyalandı kanka!', 'success');
-        };
-    }
+    // Scroll to result
+    resArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-// Handle Blob Response (File downloads)
-function handleBlobResponse(blob, defaultFilename) {
+
+function fallbackCopy(textareaEl) {
+    textareaEl.select();
+    document.execCommand('copy');
+    showToast('Panoya kopyalandı!', 'success');
+}
+
+function displayDownload(blob, filename) {
     const resArea = document.getElementById('gen-result-area');
     const textRes = document.getElementById('gen-text-result');
     const copyBtn = document.getElementById('gen-copy-btn');
@@ -419,19 +425,28 @@ function handleBlobResponse(blob, defaultFilename) {
     textRes.classList.add('hidden');
     copyBtn.classList.add('hidden');
     copyBtn.classList.remove('flex');
-
     dlArea.classList.remove('hidden');
     dlArea.classList.add('flex');
 
-    // Create persistent URL
     const url = URL.createObjectURL(blob);
     dlBtn.onclick = () => {
         const a = document.createElement('a');
-        a.href = url;
-        a.download = defaultFilename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        showToast('Dosya indiriliyor...', 'success');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        showToast('İndiriliyor...', 'success');
     };
+
+    resArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ==========================================
+// UTILITIES
+// ==========================================
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
